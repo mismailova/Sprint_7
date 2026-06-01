@@ -9,13 +9,22 @@ class TestCreateCourier:
     @allure.title('Успешное создание курьера')
     @allure.description('Создается новый курьер при отправке валидного тела запроса')
 
-    def test_create_courier_success(self, courier):
-        response, _, _ = courier
+    def test_create_courier_success(self):
+        courier = CourierMethods()
+        courier_data = data.generate_courier_data()
+        response = courier.create_courier(courier_data)
 
-        assert response.status_code == 201 and response.json() == data.CREATE_COURIER_RESPONSE, (
-            f"Ожидался статус 201 и тело {data.CREATE_COURIER_RESPONSE}, "
-            f"получено: статус {response.status_code}, тело {response.json()}"
-    )
+        try:
+            assert response.status_code == 201 and response.json() == data.CREATE_COURIER_RESPONSE, (
+                f"Ожидался статус 201 и тело {data.CREATE_COURIER_RESPONSE}, "
+                f"получено: статус {response.status_code}, тело {response.json()}"
+        )
+        finally:
+            login_response = courier.login_courier({
+                "login": courier_data["login"],
+                "password": courier_data["password"]
+            })
+            courier.delete_courier(login_response.json()["id"])
 
     @allure.title('Ошибка при создании курьера с существующими данными')
     @allure.description('При создании курьера с существующими данными код 409 и текст ошибки')
